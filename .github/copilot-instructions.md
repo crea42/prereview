@@ -13,7 +13,7 @@ PreReview is a Go-based CLI tool that provides AI-powered code review before git
 ## Project Structure
 ```
 prereview/
-├── cmd/                    # CLI commands
+├── cmd/                   # CLI commands
 │   ├── root.go            # Root command and flags
 │   ├── review.go          # Review command (default)
 │   ├── install.go         # Install git pre-commit hook
