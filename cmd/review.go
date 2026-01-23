@@ -107,6 +107,36 @@ func runReview(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// Check if running in hook mode (non-interactive)
+	if viper.GetBool("hook") {
+		ui.Warning(fmt.Sprintf("Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
+		
+		// Count by severity
+		errors := 0
+		warnings := 0
+		for _, s := range result.Suggestions {
+			switch s.Severity {
+			case "error":
+				errors++
+			case "warning":
+				warnings++
+			}
+		}
+		
+		if errors > 0 {
+			ui.Error(fmt.Sprintf("  🔴 %d error(s) found - commit blocked", errors))
+		}
+		if warnings > 0 {
+			ui.Warning(fmt.Sprintf("  🟡 %d warning(s) found", warnings))
+		}
+		
+		ui.Info("\nRun 'prereview' interactively to review and fix issues.")
+		
+		// In hook mode, exit with error if there are any suggestions
+		// This blocks the commit
+		os.Exit(1)
+	}
+
 	// Check if markdown output is enabled
 	if viper.GetBool("output_markdown") {
 		generator := output.NewMarkdownGenerator(repoRoot)

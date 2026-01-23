@@ -44,10 +44,12 @@ func init() {
 	rootCmd.PersistentFlags().String("model", "", "AI model to use (claude, gpt-5, gpt-4, gemini, grok)")
 	rootCmd.PersistentFlags().Bool("strict", false, "Require all issues to be fixed before committing")
 	rootCmd.PersistentFlags().Bool("verbose", false, "Show detailed output")
+	rootCmd.PersistentFlags().Bool("hook", false, "Run in pre-commit hook mode (non-interactive, exits with error if issues found)")
 
 	_ = viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
 	_ = viper.BindPFlag("strict", rootCmd.PersistentFlags().Lookup("strict"))
 	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	_ = viper.BindPFlag("hook", rootCmd.PersistentFlags().Lookup("hook"))
 }
 
 func initConfig() {
