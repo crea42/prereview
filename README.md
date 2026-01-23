@@ -2,7 +2,7 @@
 
 AI-powered code review before you commit. Uses the GitHub Copilot SDK to analyze your staged changes and provide actionable suggestions.
 
-![PreReview Demo](prereview_demo.gif)
+![PreReview Demo](https://vhs.charm.sh/vhs-5kpVg908APYT1zeSPpN0vL.gif)
 
 ## Features
 
@@ -16,12 +16,15 @@ AI-powered code review before you commit. Uses the GitHub Copilot SDK to analyze
 
 - **GitHub Copilot subscription** (Free, Pro, Business, or Enterprise)
 - **Copilot CLI** installed:
+
   ```bash
   brew install copilot-cli
   ```
+
 - Logged in to GitHub:
+
   ```bash
-  copilot /login
+  copilot auth login
   ```
 
 ## Installation
@@ -79,12 +82,12 @@ sudo mv prereview /usr/local/bin/
 
 ### Flags
 
-| Flag        | Description                                      |
-|-------------|--------------------------------------------------|
-| `--model`   | AI model to use (claude, gpt-4, gemini, grok) |
-| `--strict`  | Require all issues to be fixed before committing |
-| `--verbose` | Show detailed output                             |
-| `--config`  | Path to config file                              |
+| Flag        | Description                                       |
+|-------------|---------------------------------------------------|
+| `--model`   | AI model to use (claude, gpt-4, gemini, grok)     |
+| `--strict`  | Require all issues to be fixed before committing  |
+| `--verbose` | Show detailed output                              |
+| `--config`  | Path to config file                               |
 
 ### Interactive Review
 
@@ -133,24 +136,29 @@ focus:
 
 ## Authentication
 
-PreReview uses your existing GitHub Copilot license. It looks for authentication in this order:
+PreReview uses the **GitHub Copilot CLI** for authentication. The CLI handles all authentication automatically using your GitHub Copilot subscription.
 
-1. `GITHUB_COPILOT_TOKEN` environment variable
-2. GitHub CLI (`gh auth token`)
-3. VS Code Copilot extension credentials
+### Setup
 
-### Using GitHub CLI (Recommended)
+1. **Install Copilot CLI:**
 
-```bash
-# Install GitHub CLI
-brew install gh
+   ```bash
+   brew install copilot-cli
+   ```
 
-# Login
-gh auth login
+2. **Login to GitHub:**
 
-# Verify
-gh auth status
-```
+   ```bash
+   copilot auth login
+   ```
+
+3. **Verify authentication:**
+
+   ```bash
+   copilot auth status
+   ```
+
+That's it! PreReview will use your Copilot CLI credentials automatically.
 
 ## Examples
 
