@@ -2,7 +2,7 @@
 
 AI-powered code review before you commit. Uses the GitHub Copilot SDK to analyze your staged changes and provide actionable suggestions.
 
-![PreReview Demo](https://via.placeholder.com/800x400?text=PreReview+Demo)
+![PreReview Demo](prereview_demo.gif)
 
 ## Features
 
