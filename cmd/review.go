@@ -107,6 +107,17 @@ func runReview(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// Generate markdown file if enabled (do this before hook mode exit)
+	if viper.GetBool("output_markdown") {
+		generator := output.NewMarkdownGenerator(repoRoot)
+		filePath, err := generator.GenerateSuggestionsFile(result)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Failed to generate markdown file: %v", err))
+			os.Exit(1)
+		}
+		ui.Success(fmt.Sprintf("✓ Generated suggestions file: %s", filePath))
+	}
+
 	// Check if running in hook mode (non-interactive)
 	if viper.GetBool("hook") {
 		ui.Warning(fmt.Sprintf("Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
@@ -137,15 +148,8 @@ func runReview(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// Check if markdown output is enabled
+	// Check if markdown output is enabled (non-hook mode, return after generating)
 	if viper.GetBool("output_markdown") {
-		generator := output.NewMarkdownGenerator(repoRoot)
-		filePath, err := generator.GenerateSuggestionsFile(result)
-		if err != nil {
-			ui.Error(fmt.Sprintf("Failed to generate markdown file: %v", err))
-			os.Exit(1)
-		}
-		ui.Success(fmt.Sprintf("✓ Generated suggestions file: %s", filePath))
 		ui.Info(fmt.Sprintf("  Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
 		return
 	}
