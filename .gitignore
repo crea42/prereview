@@ -1,0 +1,4 @@
+prereview
+*.exe
+.prereviewrc.yaml
+.DS_Store

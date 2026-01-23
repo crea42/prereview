@@ -1,0 +1,238 @@
+# PreReview
+
+AI-powered code review before you commit. Uses the GitHub Copilot SDK to analyze your staged changes and provide actionable suggestions.
+
+![PreReview Demo](https://via.placeholder.com/800x400?text=PreReview+Demo)
+
+## Features
+
+- 🔍 **AI-Powered Review** - Uses GitHub Copilot SDK (Claude, GPT-5, Gemini, Grok) to review your code
+- 🎯 **Interactive Workflow** - Fix, skip, or review suggestions one by one
+- 🪝 **Git Hook Integration** - Automatically runs before each commit
+- ⚙️ **Configurable** - Customize models, strictness, and ignore patterns
+- 🎨 **Beautiful Terminal UI** - Clean, colorful output with lipgloss
+
+## Prerequisites
+
+- **GitHub Copilot subscription** (Free, Pro, Business, or Enterprise)
+- **Copilot CLI** installed:
+  ```bash
+  brew install copilot-cli
+  ```
+- Logged in to GitHub:
+  ```bash
+  copilot /login
+  ```
+
+## Installation
+
+### Using Go
+
+```bash
+go install github.com/emilushi/prereview@latest
+```
+
+### From Source
+
+```bash
+git clone https://github.com/emilushi/prereview.git
+cd prereview
+go build -o prereview .
+sudo mv prereview /usr/local/bin/
+```
+
+## Quick Start
+
+1. **Review staged changes:**
+
+   ```bash
+   git add .
+   prereview
+   ```
+
+2. **Install as pre-commit hook:**
+
+   ```bash
+   prereview install
+   ```
+
+3. **Create config file:**
+
+   ```bash
+   prereview config init
+   ```
+
+## Usage
+
+### Commands
+
+| Command                              | Description                         |
+|--------------------------------------|-------------------------------------|
+| `prereview`                          | Review staged changes interactively |
+| `prereview review`                   | Same as above                       |
+| `prereview install`                  | Install as git pre-commit hook      |
+| `prereview uninstall`                | Remove git pre-commit hook          |
+| `prereview config init`              | Create default config file          |
+| `prereview config list`              | Show current configuration          |
+| `prereview config set <key> <value>` | Set a config value                  |
+| `prereview config get <key>`         | Get a config value                  |
+
+### Flags
+
+| Flag        | Description                                      |
+|-------------|--------------------------------------------------|
+| `--model`   | AI model to use (claude, gpt-4, gemini, grok) |
+| `--strict`  | Require all issues to be fixed before committing |
+| `--verbose` | Show detailed output                             |
+| `--config`  | Path to config file                              |
+
+### Interactive Review
+
+When reviewing, you have these options for each suggestion:
+
+- `[f]ix`  - Apply the suggested fix (if available)
+- `[s]kip` - Skip this suggestion
+- `[v]iew` - View the diff for context
+- `[q]uit` - Abort the review
+
+After reviewing all suggestions:
+
+- `[y]es`       - Proceed with commit
+- `[n]o`        - Abort
+- `[r]e-review` - Review again (after making manual fixes)
+
+## Configuration
+
+Create a `.prereviewrc.yaml` in your project root or `~/.prereviewrc.yaml` for global settings:
+
+```yaml
+# AI model to use
+model: gpt-4
+
+# Require all issues to be fixed
+strict: false
+
+# Show detailed output
+verbose: false
+
+# Files to ignore
+ignore_patterns:
+  - "*.min.js"
+  - "vendor/*"
+  - "node_modules/*"
+
+# Max file size to review (bytes)
+max_file_size: 100000
+
+# Focus areas
+focus:
+  - security
+  - performance
+  - best-practices
+```
+
+## Authentication
+
+PreReview uses your existing GitHub Copilot license. It looks for authentication in this order:
+
+1. `GITHUB_COPILOT_TOKEN` environment variable
+2. GitHub CLI (`gh auth token`)
+3. VS Code Copilot extension credentials
+
+### Using GitHub CLI (Recommended)
+
+```bash
+# Install GitHub CLI
+brew install gh
+
+# Login
+gh auth login
+
+# Verify
+gh auth status
+```
+
+## Examples
+
+### Basic Review
+
+```bash
+$ git add src/utils.js
+$ prereview
+
+🔍 Reviewing 1 changed file(s)...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 src/utils.js [1/2]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Line 45
+
+  ⚠ Missing null check
+
+  Accessing property on potentially null value.
+
+  Suggested fix:
+  if (user?.email) { ... }
+
+  best-practice
+
+  [f]ix | [s]kip | [v]iew diff | [q]uit: f
+
+  ✓ Applied fix
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary
+  ✓ 1 fixed
+  ⏭ 0 skipped
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Proceed with commit? [y]es | [n]o | [r]e-review: y
+
+✓ Review complete: 1 fixed, 0 skipped
+```
+
+### Strict Mode
+
+```bash
+prereview --strict
+```
+
+In strict mode, you cannot proceed with commit if any suggestions are skipped.
+
+## Development
+
+### Requirements
+
+- Go 1.21+
+- GitHub Copilot license
+
+### Building
+
+```bash
+go build -o prereview .
+```
+
+### Testing
+
+```bash
+go test ./...
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a pull request
+
+## Acknowledgments
+
+- [GitHub Copilot](https://github.com/features/copilot) for AI capabilities
+- [Cobra](https://github.com/spf13/cobra) for CLI framework
+- [Viper](https://github.com/spf13/viper) for configuration
+- [Lipgloss](https://github.com/charmbracelet/lipgloss) for terminal styling
