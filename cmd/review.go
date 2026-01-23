@@ -120,31 +120,52 @@ func runReview(cmd *cobra.Command, args []string) {
 
 	// Check if running in hook mode (non-interactive)
 	if viper.GetBool("hook") {
-		ui.Warning(fmt.Sprintf("Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
-		
 		// Count by severity
 		errors := 0
 		warnings := 0
+		infos := 0
 		for _, s := range result.Suggestions {
 			switch s.Severity {
 			case "error":
 				errors++
 			case "warning":
 				warnings++
+			default:
+				infos++
 			}
 		}
+
+		ui.Info(fmt.Sprintf("Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
 		
 		if errors > 0 {
-			ui.Error(fmt.Sprintf("  🔴 %d error(s) found - commit blocked", errors))
+			ui.Error(fmt.Sprintf("  🔴 %d error(s)", errors))
 		}
 		if warnings > 0 {
-			ui.Warning(fmt.Sprintf("  🟡 %d warning(s) found", warnings))
+			ui.Warning(fmt.Sprintf("  🟡 %d warning(s)", warnings))
+		}
+		if infos > 0 {
+			ui.Info(fmt.Sprintf("  🔵 %d info/hint(s)", infos))
+		}
+
+		// In strict mode, always block without prompt
+		if viper.GetBool("strict") {
+			ui.Warning("\nStrict mode: commit blocked due to suggestions")
+			ui.Info("Run 'prereview' interactively to review and fix issues.")
+			os.Exit(1)
+		}
+
+		// Prompt user to proceed or abort
+		fmt.Print("\nProceed with commit? [y/N]: ")
+		var response string
+		fmt.Scanln(&response)
+		
+		response = strings.ToLower(strings.TrimSpace(response))
+		if response == "y" || response == "yes" {
+			ui.Success("✓ Proceeding with commit...")
+			return
 		}
 		
-		ui.Info("\nRun 'prereview' interactively to review and fix issues.")
-		
-		// In hook mode, exit with error if there are any suggestions
-		// This blocks the commit
+		ui.Info("Commit aborted. Run 'prereview' interactively to review and fix issues.")
 		os.Exit(1)
 	}
 
