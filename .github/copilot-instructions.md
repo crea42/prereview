@@ -16,6 +16,7 @@ prereview/
 ├── cmd/                   # CLI commands
 │   ├── root.go            # Root command and flags
 │   ├── review.go          # Review command (default)
+│   ├── doctor.go          # Check dependencies and setup
 │   ├── install.go         # Install git pre-commit hook
 │   ├── uninstall.go       # Uninstall git pre-commit hook
 │   └── config.go          # Config init/list/get/set commands
@@ -44,6 +45,7 @@ prereview/
 - `prereview` - Review staged changes interactively
 - `prereview review` - Same as above (explicit)
 - `prereview review --markdown` - Output suggestions to markdown file
+- `prereview doctor` - Check dependencies (Copilot CLI, Git) and setup
 - `prereview install` - Install as git pre-commit hook
 - `prereview uninstall` - Remove git pre-commit hook  
 - `prereview config init` - Create default .prereviewrc.yaml

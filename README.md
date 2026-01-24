@@ -73,6 +73,7 @@ sudo mv prereview /usr/local/bin/
 |--------------------------------------|-------------------------------------|
 | `prereview`                          | Review staged changes interactively |
 | `prereview review`                   | Same as above                       |
+| `prereview doctor`                   | Check dependencies and setup        |
 | `prereview install`                  | Install as git pre-commit hook      |
 | `prereview uninstall`                | Remove git pre-commit hook          |
 | `prereview config init`              | Create default config file          |

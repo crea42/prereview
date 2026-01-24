@@ -154,3 +154,23 @@ func SeverityIcon(severity string) string {
 func Divider() {
 	fmt.Println(mutedStyle.Render(strings.Repeat("━", 60)))
 }
+
+// SuccessIcon returns a green checkmark
+func SuccessIcon() string {
+	return successStyle.Render("✓")
+}
+
+// ErrorIcon returns a red X
+func ErrorIcon() string {
+	return errorStyle.Render("✗")
+}
+
+// WarningIcon returns a yellow warning symbol
+func WarningIcon() string {
+	return warningStyle.Render("⚠")
+}
+
+// InfoIcon returns a blue info symbol
+func InfoIcon() string {
+	return infoStyle.Render("ℹ")
+}
