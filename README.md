@@ -82,12 +82,42 @@ sudo mv prereview /usr/local/bin/
 
 ### Flags
 
-| Flag        | Description                                       |
-|-------------|---------------------------------------------------|
-| `--model`   | AI model to use (claude, gpt-4, gemini, grok)     |
-| `--strict`  | Require all issues to be fixed before committing  |
-| `--verbose` | Show detailed output                              |
-| `--config`  | Path to config file                               |
+| Flag          | Description                                                           |
+|---------------|-----------------------------------------------------------------------|
+| `--model`     | AI model to use (claude, gpt-4, gemini, grok)                         |
+| `--strict`    | Require all issues to be fixed before committing                      |
+| `--tolerance` | Review tolerance: `strict`, `moderate`, `relaxed` (default: moderate) |
+| `--force`     | Force commit even with unresolved suggestions                         |
+| `--verbose`   | Show detailed output                                                  |
+| `--config`    | Path to config file                                                   |
+
+### Tolerance Levels
+
+PreReview supports three tolerance levels to reduce false positives:
+
+| Level      | Description                                                                |
+|------------|----------------------------------------------------------------------------|
+| `strict`   | Reports all potential issues including style nitpicks                      |
+| `moderate` | Reports bugs, security issues, and significant quality concerns (default)  |
+| `relaxed`  | Only reports definite bugs and critical security issues                    |
+
+```bash
+# Use relaxed mode for less noise
+prereview --tolerance relaxed
+
+# Or set in config
+prereview config set tolerance relaxed
+```
+
+### Confidence Levels
+
+Each suggestion includes a confidence level:
+
+- **high** - Definite issue, should be fixed (>95% confident)
+- **medium** - Likely an issue but could be intentional (70-95% confident)
+- **low** - Possible issue, may be false positive (<70% confident)
+
+**Only high-confidence errors block commits by default.** Low-confidence suggestions are shown but don't prevent you from committing.
 
 ### Interactive Review
 
@@ -115,6 +145,16 @@ model: gpt-4
 # Require all issues to be fixed
 strict: false
 
+# Review tolerance: strict, moderate, relaxed
+# - strict: Report all potential issues
+# - moderate: Report bugs and significant issues (default)
+# - relaxed: Only report definite bugs and security issues
+tolerance: moderate
+
+# What severity level blocks commits: errors, warnings, all, none
+# Default: errors (only high-confidence errors block)
+block_on: errors
+
 # Show detailed output
 verbose: false
 
@@ -127,12 +167,53 @@ ignore_patterns:
 # Max file size to review (bytes)
 max_file_size: 100000
 
-# Focus areas
-focus:
-  - security
-  - performance
-  - best-practices
+# Additional coding standard files to detect (beyond auto-detected ones)
+# These are file paths relative to repo root
+coding_standards:
+  - ".custom-lint.json"
+  - "config/phpcs-custom.xml"
+
+# Project-specific hints for the AI reviewer
+# Use this to provide context that reduces false positives
+project_hints:
+  - "Factory methods may return different subtypes based on input"
+  - "Data is sanitized at input time, not output time"
+  - "We use dependency injection throughout the codebase"
 ```
+
+### Reducing False Positives
+
+If you're experiencing too many false positives:
+
+1. **Use relaxed tolerance:**
+
+   ```bash
+   prereview config set tolerance relaxed
+   ```
+
+2. **Add project-specific context:**
+
+   ```yaml
+   project_hints:
+     - "This project uses the Repository pattern"
+     - "getEntity() returns different entity types based on the ID prefix"
+     - "All user input is sanitized before storage"
+   ```
+
+3. **Change what blocks commits:**
+
+   ```yaml
+   block_on: errors  # Only block on high-confidence errors
+   ```
+
+4. **Force commit when needed:**
+
+   ```bash
+   git commit  # Will prompt: "Proceed despite issues? [y/N]"
+   # Or bypass completely:
+   prereview --force
+   git commit --no-verify
+   ```
 
 ## Authentication
 

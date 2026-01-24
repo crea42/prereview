@@ -86,9 +86,11 @@ func runReview(cmd *cobra.Command, args []string) {
 
 	// Get custom coding standards from config
 	customStandards := viper.GetStringSlice("coding_standards")
+	projectHints := viper.GetStringSlice("project_hints")
+	tolerance := viper.GetString("tolerance")
 
 	// Create reviewer with coding standards context
-	reviewer, err := review.NewReviewer(viper.GetString("model"), repoRoot, customStandards)
+	reviewer, err := review.NewReviewer(viper.GetString("model"), repoRoot, customStandards, projectHints, tolerance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Failed to initialize reviewer: %v", err))
 		os.Exit(1)
@@ -120,14 +122,35 @@ func runReview(cmd *cobra.Command, args []string) {
 
 	// Check if running in hook mode (non-interactive)
 	if viper.GetBool("hook") {
-		// Count by severity
-		errors := 0
+		// Check for force flag first
+		if viper.GetBool("force") {
+			ui.Info(fmt.Sprintf("Found %d suggestion(s) - force flag set, proceeding with commit", len(result.Suggestions)))
+			return
+		}
+
+		// Count by severity and confidence
+		blockingErrors := 0
 		warnings := 0
 		infos := 0
+		lowConfidence := 0
+		
+		blockOn := viper.GetString("block_on") // errors, warnings, all, none
+		
 		for _, s := range result.Suggestions {
+			// Low confidence suggestions never block
+			if s.Confidence == "low" {
+				lowConfidence++
+				continue
+			}
+			
 			switch s.Severity {
 			case "error":
-				errors++
+				// Only high confidence errors block by default
+				if s.Confidence == "high" || s.Confidence == "" {
+					blockingErrors++
+				} else {
+					warnings++ // Treat medium-confidence errors as warnings
+				}
 			case "warning":
 				warnings++
 			default:
@@ -137,8 +160,8 @@ func runReview(cmd *cobra.Command, args []string) {
 
 		ui.Info(fmt.Sprintf("Found %d suggestion(s) across %d file(s)", len(result.Suggestions), len(result.Files)))
 		
-		if errors > 0 {
-			ui.Error(fmt.Sprintf("  🔴 %d error(s)", errors))
+		if blockingErrors > 0 {
+			ui.Error(fmt.Sprintf("  🔴 %d blocking error(s)", blockingErrors))
 		}
 		if warnings > 0 {
 			ui.Warning(fmt.Sprintf("  🟡 %d warning(s)", warnings))
@@ -146,27 +169,53 @@ func runReview(cmd *cobra.Command, args []string) {
 		if infos > 0 {
 			ui.Info(fmt.Sprintf("  🔵 %d info/hint(s)", infos))
 		}
+		if lowConfidence > 0 {
+			ui.Muted(fmt.Sprintf("  ⚪ %d low-confidence suggestion(s) (non-blocking)", lowConfidence))
+		}
 
-		// In strict mode, always block without prompt
-		if viper.GetBool("strict") {
-			ui.Warning("\nStrict mode: commit blocked due to suggestions")
+		// Determine if we should block
+		shouldBlock := false
+		switch blockOn {
+		case "none":
+			shouldBlock = false
+		case "all":
+			shouldBlock = blockingErrors > 0 || warnings > 0 || infos > 0
+		case "warnings":
+			shouldBlock = blockingErrors > 0 || warnings > 0
+		default: // "errors" or empty
+			shouldBlock = blockingErrors > 0
+		}
+
+		// In strict mode, always block if there are any high-confidence issues
+		if viper.GetBool("strict") && shouldBlock {
+			ui.Warning("\nStrict mode: commit blocked due to high-confidence issues")
 			ui.Info("Run 'prereview' interactively to review and fix issues.")
+			ui.Info("Or use 'git commit --no-verify' or 'prereview --force' to bypass.")
 			os.Exit(1)
 		}
 
-		// Prompt user to proceed or abort
-		fmt.Print("\nProceed with commit? [y/N]: ")
-		var response string
-		fmt.Scanln(&response)
-		
-		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" {
-			ui.Success("✓ Proceeding with commit...")
-			return
+		// Non-strict mode: block only on blocking errors, but allow override
+		if shouldBlock {
+			fmt.Print("\nProceed with commit despite issues? [y/N]: ")
+			var response string
+			fmt.Scanln(&response)
+			
+			response = strings.ToLower(strings.TrimSpace(response))
+			if response == "y" || response == "yes" {
+				ui.Success("✓ Proceeding with commit...")
+				return
+			}
+			
+			ui.Info("Commit aborted. Run 'prereview' interactively to review and fix issues.")
+			os.Exit(1)
 		}
-		
-		ui.Info("Commit aborted. Run 'prereview' interactively to review and fix issues.")
-		os.Exit(1)
+
+		// No blocking issues
+		if len(result.Suggestions) > 0 {
+			ui.Info("\nNo blocking issues found. Proceeding with commit...")
+			ui.Muted("(Run 'prereview' to review non-blocking suggestions)")
+		}
+		return
 	}
 
 	// Check if markdown output is enabled (non-hook mode, return after generating)

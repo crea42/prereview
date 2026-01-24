@@ -3,6 +3,8 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -44,6 +46,22 @@ func GetRepoRoot() (string, error) {
 		return "", fmt.Errorf("git rev-parse failed: %w: %s", err, output)
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+// ReadFileContent reads a file and returns its content
+func ReadFileContent(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	
+	return string(data), nil
 }
 
 // GetStagedChanges returns a list of staged file changes

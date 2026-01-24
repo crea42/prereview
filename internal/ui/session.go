@@ -178,6 +178,16 @@ func (s *ReviewSession) printSuggestion(sug review.Suggestion, num, total int) {
 	fmt.Println()
 	fmt.Println(sevStyle.Render("  " + icon + " " + sug.Title))
 
+	// Confidence indicator
+	if sug.Confidence != "" {
+		confStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Italic(true)
+		confText := fmt.Sprintf("  Confidence: %s", sug.Confidence)
+		if sug.Confidence == "low" {
+			confText += " (may be false positive)"
+		}
+		fmt.Println(confStyle.Render(confText))
+	}
+
 	// Description
 	if sug.Description != "" {
 		descStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#D1D5DB"))

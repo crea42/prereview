@@ -45,11 +45,15 @@ func init() {
 	rootCmd.PersistentFlags().Bool("strict", false, "Require all issues to be fixed before committing")
 	rootCmd.PersistentFlags().Bool("verbose", false, "Show detailed output")
 	rootCmd.PersistentFlags().Bool("hook", false, "Run in pre-commit hook mode (non-interactive, exits with error if issues found)")
+	rootCmd.PersistentFlags().String("tolerance", "", "Review tolerance level: strict, moderate, relaxed (default: moderate)")
+	rootCmd.PersistentFlags().Bool("force", false, "Force commit even with unresolved suggestions (bypasses blocking)")
 
 	_ = viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
 	_ = viper.BindPFlag("strict", rootCmd.PersistentFlags().Lookup("strict"))
 	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	_ = viper.BindPFlag("hook", rootCmd.PersistentFlags().Lookup("hook"))
+	_ = viper.BindPFlag("tolerance", rootCmd.PersistentFlags().Lookup("tolerance"))
+	_ = viper.BindPFlag("force", rootCmd.PersistentFlags().Lookup("force"))
 }
 
 func initConfig() {
@@ -71,8 +75,12 @@ func initConfig() {
 	viper.SetDefault("model", "gpt-4o-mini")
 	viper.SetDefault("strict", false)
 	viper.SetDefault("verbose", false)
+	viper.SetDefault("tolerance", "moderate")    // strict, moderate, relaxed
 	viper.SetDefault("ignore_patterns", []string{})
-	viper.SetDefault("max_file_size", 100000) // 100KB
+	viper.SetDefault("max_file_size", 100000)    // 100KB
+	viper.SetDefault("block_on", "errors")       // errors, warnings, all, none
+	viper.SetDefault("coding_standards", []string{}) // Additional standard files to detect
+	viper.SetDefault("project_hints", []string{})    // Project-specific hints for the AI
 
 	viper.AutomaticEnv()
 

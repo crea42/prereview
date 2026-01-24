@@ -16,12 +16,22 @@ type Suggestion struct {
 	Line         int
 	EndLine      int
 	Severity     Severity
+	Confidence   Confidence // How confident the AI is about this suggestion
 	Title        string
 	Description  string
 	OriginalCode string // Original code to be replaced
 	SuggestFix   string // Suggested replacement code
 	Category     string // security, performance, style, etc.
 }
+
+// Confidence levels for suggestions
+type Confidence string
+
+const (
+	ConfidenceHigh   Confidence = "high"   // Definite issue, should be fixed
+	ConfidenceMedium Confidence = "medium" // Likely an issue, review recommended
+	ConfidenceLow    Confidence = "low"    // Possible issue, may be false positive
+)
 
 // Severity levels for suggestions
 type Severity string
@@ -45,10 +55,12 @@ type Reviewer struct {
 	client           *copilot.Client
 	model            string
 	standardsContext string
+	projectHints     []string // User-provided hints about the project
+	tolerance        string   // strict, moderate, relaxed
 }
 
 // NewReviewer creates a new Reviewer instance
-func NewReviewer(model string, repoRoot string, customStandards []string) (*Reviewer, error) {
+func NewReviewer(model string, repoRoot string, customStandards []string, projectHints []string, tolerance string) (*Reviewer, error) {
 	client, err := copilot.NewClient()
 	if err != nil {
 		return nil, err
@@ -64,10 +76,17 @@ func NewReviewer(model string, repoRoot string, customStandards []string) (*Revi
 		standardsContext = detector.GetStandardsContext()
 	}
 
+	// Default tolerance
+	if tolerance == "" {
+		tolerance = "moderate"
+	}
+
 	return &Reviewer{
 		client:           client,
 		model:            model,
 		standardsContext: standardsContext,
+		projectHints:     projectHints,
+		tolerance:        tolerance,
 	}, nil
 }
 
@@ -114,7 +133,7 @@ func (r *Reviewer) Review(changes []git.FileChange) (*ReviewResult, error) {
 
 // reviewFile reviews a single file and returns suggestions
 func (r *Reviewer) reviewFile(change git.FileChange) ([]Suggestion, error) {
-	prompt := buildReviewPrompt(change, r.standardsContext)
+	prompt := buildReviewPrompt(change, r.standardsContext, r.projectHints, r.tolerance)
 
 	response, err := r.client.Chat(r.model, prompt)
 	if err != nil {
@@ -125,17 +144,56 @@ func (r *Reviewer) reviewFile(change git.FileChange) ([]Suggestion, error) {
 }
 
 // buildReviewPrompt creates the prompt for code review
-func buildReviewPrompt(change git.FileChange, standardsContext string) string {
-	basePrompt := `You are a code reviewer. Review the following code changes and provide suggestions for improvements.
+func buildReviewPrompt(change git.FileChange, standardsContext string, projectHints []string, tolerance string) string {
+	// Build tolerance-specific guidance
+	var toleranceGuidance string
+	switch tolerance {
+	case "strict":
+		toleranceGuidance = `
+TOLERANCE: STRICT
+- Report all potential issues including style nitpicks
+- Mark uncertain issues with CONFIDENCE: low
+- Only mark as CONFIDENCE: high when you are 100% certain of an issue`
+	case "relaxed":
+		toleranceGuidance = `
+TOLERANCE: RELAXED
+- Only report definite bugs, security vulnerabilities, or critical performance issues
+- Skip style suggestions, minor improvements, and best-practice recommendations
+- If you're not at least 90% confident about an issue, don't report it
+- Skip issues that might be intentional design decisions or framework-specific patterns
+- When in doubt, assume the developer knows what they're doing`
+	default: // moderate
+		toleranceGuidance = `
+TOLERANCE: MODERATE
+- Report bugs, security issues, and significant code quality concerns
+- Skip minor style nitpicks unless they affect readability significantly
+- Mark uncertain issues with CONFIDENCE: low or medium
+- Consider framework-specific patterns - what looks wrong might be idiomatic`
+	}
 
-For each issue found, respond in this exact format:
+	basePrompt := `You are a pragmatic code reviewer. Your goal is to be HELPFUL, not pedantic.
+
+IMPORTANT GUIDELINES:
+1. AVOID FALSE POSITIVES - When uncertain, don't report. Users hate being blocked by incorrect suggestions.
+2. UNDERSTAND CONTEXT - A function that returns multiple types based on input is common (e.g., factory patterns, polymorphism).
+3. TRUST THE DEVELOPER - If code works and is reasonable, don't suggest rewrites for minor improvements.
+4. FRAMEWORK AWARENESS - Many frameworks have patterns that look wrong but are correct:
+   - Factory methods returning different subtypes based on input parameters
+   - Type hints may be broader than actual runtime types - this is often intentional
+   - Data may be sanitized/escaped at storage time, not output time
+   - Different color formats (hex, rgba, hsl) are all valid depending on context
+5. DON'T CREATE LOOPS - If suggesting a change would create a new issue, reconsider the suggestion.
+` + toleranceGuidance + `
+
+For each GENUINE issue found, respond in this exact format:
 ---
 LINE: <line number where issue starts>
 END_LINE: <end line number if multi-line, otherwise same as LINE>
 SEVERITY: <error|warning|info|hint>
+CONFIDENCE: <high|medium|low>
 CATEGORY: <security|performance|style|bug|best-practice>
 TITLE: <short title>
-DESCRIPTION: <detailed description>
+DESCRIPTION: <detailed description explaining WHY this is an issue and the RISK if not fixed>
 ORIGINAL:
 <<<
 the exact original code lines copied verbatim from the file
@@ -148,19 +206,26 @@ include multiple lines if needed, preserving all whitespace and indentation
 >>>
 ---
 
-CRITICAL RULES for ORIGINAL and FIX:
-1. ORIGINAL must be copied EXACTLY from the file content provided below - character for character
+CONFIDENCE LEVELS:
+- high: You are certain this is a bug, security issue, or definite problem (>95% confident)
+- medium: This is likely an issue but could be intentional (~70-95% confident)  
+- low: This might be an issue, or might be a valid pattern (<70% confident)
+
+CRITICAL RULES:
+1. ORIGINAL must be copied EXACTLY from the file content - character for character
 2. Include enough context (2-3 lines before/after) to make the match unique
 3. Preserve ALL whitespace, tabs, and indentation exactly as they appear
 4. For multi-line code, include all lines between <<< and >>>
 5. If no code fix is applicable, use: N/A (without <<< >>>)
+6. NEVER suggest a fix that would cause a different issue
+7. If the code is already sanitized/escaped upstream, don't flag it again
+8. Consider the full context - a "wrong type" might be polymorphic
 
 Focus on:
-- Security vulnerabilities
-- Performance issues
-- Bug risks
-- Code style and best practices
-- Error handling
+- Security vulnerabilities (CONFIDENCE: high only for definite issues)
+- Actual bugs that will cause runtime errors
+- Performance issues with measurable impact
+- Error handling gaps that could cause crashes
 `
 
 	// Add coding standards context if available
@@ -168,8 +233,16 @@ Focus on:
 		basePrompt += standardsContext
 	}
 
+	// Add project-specific hints if provided
+	if len(projectHints) > 0 {
+		basePrompt += "\n\nPROJECT-SPECIFIC CONTEXT (trust these hints from the developer):\n"
+		for _, hint := range projectHints {
+			basePrompt += "- " + hint + "\n"
+		}
+	}
+
 	basePrompt += `
-If no issues are found, respond with: NO_ISSUES
+If no issues are found (or only uncertain low-confidence issues in relaxed mode), respond with: NO_ISSUES
 
 File: ` + change.Path + `
 
@@ -258,6 +331,8 @@ func parseStructuredResponse(response string, file string) []Suggestion {
 			current.EndLine = parseIntValue(line, "END_LINE:")
 		} else if hasPrefix(line, "SEVERITY:") {
 			current.Severity = Severity(parseStringValue(line, "SEVERITY:"))
+		} else if hasPrefix(line, "CONFIDENCE:") {
+			current.Confidence = Confidence(parseStringValue(line, "CONFIDENCE:"))
 		} else if hasPrefix(line, "CATEGORY:") {
 			current.Category = parseStringValue(line, "CATEGORY:")
 		} else if hasPrefix(line, "TITLE:") {
